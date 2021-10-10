@@ -5,3 +5,9 @@
 /test/
 /out/
 /run/
+/bots/
+/.run/
+/config/
+/gradle/
+/data/
+/src/test/
