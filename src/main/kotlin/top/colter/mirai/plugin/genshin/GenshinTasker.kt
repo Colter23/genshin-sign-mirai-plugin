@@ -128,7 +128,7 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                 runCatching{
 //                    val signInfo = httpUtils.getAndDecode<BH3InfoData>(BH3_INFO_URL(r.region, r.uid))
                     val postBody = "{\"act_id\":\"${BH3_ACT_ID}\",\"region\":\"${r.region}\",\"uid\":\"${r.uid}\"}"
-                    val res = httpUtils.post(SIGN_URL, postBody).decode<ResultData>()
+                    val res = httpUtils.post(BH3_SIGN_URL, postBody).decode<ResultData>()
                     when(res.code){
                         0 -> {
                             val signData = res.data?.decode<BH3SignData>()

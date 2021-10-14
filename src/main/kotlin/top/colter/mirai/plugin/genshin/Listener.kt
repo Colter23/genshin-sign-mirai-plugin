@@ -122,7 +122,7 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                 }
 
                 when(content){
-                    "米哈游签到功能" -> sender.sendMessage("原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除米游社账号 : 删除账号\n临时签到 : 临时执行签到")
+                    "米哈游签到功能" -> sender.sendMessage("原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到")
 
                     "原神签到","崩坏签到" -> {
                         if (genshinSub[sender.id] == null){
@@ -161,7 +161,7 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                         }
                     }
 
-                    "删除米游社账号" -> {
+                    "删除账号" -> {
                         if (genshinSub[sender.id] != null){
                             sender.sendMessage("要删除哪个账号呢, 请回复‘@’后面的uid\n可以回复  全部删除  删除并关闭签到功能")
                             sender.sendMessage(accountList(sender.id))
