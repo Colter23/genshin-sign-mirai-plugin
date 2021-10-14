@@ -28,6 +28,7 @@ inline fun <reified T> JsonElement.decode(): T = json.decodeFromJsonElement(json
 class HttpUtils {
 
     var cookie: String = ""
+    var actId: String = "e202009291139501"
 
     private var client: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(10000)).build()
 
@@ -55,7 +56,7 @@ class HttpUtils {
         return HttpRequest.newBuilder()
             .header("Content-Type", "application/json;charset=UTF-8")
             .header("User-Agent", USER_AGENT)
-            .header("Referer", REFERER_URL)
+            .header("Referer", REFERER_URL(actId))
             .header("Accept-Encoding", "deflate, br")
             .header("Cookie",cookie)
     }

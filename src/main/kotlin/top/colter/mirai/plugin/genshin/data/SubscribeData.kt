@@ -18,7 +18,9 @@ data class AccountData(
     @SerialName("uid")
     val uid: String = "",
     @SerialName("game_roles")
-    val gameRoles: MutableList<Role>? = null,
+    var gameRoles: MutableList<Role>? = null,
+    @SerialName("bh3_game_roles")
+    var bh3GameRoles: MutableList<Role>? = null,
     @SerialName("cookie")
     val cookie: String = ""
 )

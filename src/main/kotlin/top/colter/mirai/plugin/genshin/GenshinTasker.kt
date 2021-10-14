@@ -15,10 +15,7 @@ import net.mamoe.mirai.utils.warning
 import top.colter.mirai.plugin.genshin.PluginMain.contactMap
 import top.colter.mirai.plugin.genshin.PluginMain.contactMutex
 import top.colter.mirai.plugin.genshin.PluginMain.httpUtils
-import top.colter.mirai.plugin.genshin.data.Awards
-import top.colter.mirai.plugin.genshin.data.ResultData
-import top.colter.mirai.plugin.genshin.data.SignInfoData
-import top.colter.mirai.plugin.genshin.data.SubscribeData
+import top.colter.mirai.plugin.genshin.data.*
 import top.colter.mirai.plugin.genshin.utils.AesUtils
 import top.colter.mirai.plugin.genshin.utils.decode
 import java.time.*
@@ -86,9 +83,12 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
 
     private suspend fun signAction(delegate: Long, subData: SubscribeData){
         var successMessage = "====原神签到====\n"
+        var bh3SuccessMessage = "====崩坏3签到====\n"
         var errorMessage = "====签到失败====\n"
+
         subData.accounts.forEach {
             httpUtils.cookie = AesUtils.decrypt(it.cookie, "$delegate${it.uid}")?:""
+            httpUtils.actId = ACT_ID
             it.gameRoles?.forEach l@{ r ->
                 runCatching{
                     val signInfo = httpUtils.getAndDecode<SignInfoData>(INFO_URL(r.region, r.uid))
@@ -123,10 +123,51 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                     PluginMain.logger.warning({ "签到失败" }, e)
                 }
             }
+            httpUtils.actId = BH3_ACT_ID
+            it.bh3GameRoles?.forEach b@{ r->
+                runCatching{
+//                    val signInfo = httpUtils.getAndDecode<BH3InfoData>(BH3_INFO_URL(r.region, r.uid))
+                    val postBody = "{\"act_id\":\"${BH3_ACT_ID}\",\"region\":\"${r.region}\",\"uid\":\"${r.uid}\"}"
+                    val res = httpUtils.post(SIGN_URL, postBody).decode<ResultData>()
+                    when(res.code){
+                        0 -> {
+                            val signData = res.data?.decode<BH3SignData>()
+                            val award = signData?.list?.stream()?.filter { a -> a.status == 2 }?.max { o1, o2 -> if(o1.day>o2.day) 1 else -1 }?.get()
+
+                            if (subData.pushMsg){
+                                bh3SuccessMessage += "舰长: ${r.nickname}\n" +
+                                    "奖励: ${award?.name}x${award?.cnt}\n" +
+                                    "天数: ${award?.day}\n" +
+                                    "=============\n"
+                            }
+                        }
+                        -5003 -> {
+                            if (subData.pushMsg){
+                                bh3SuccessMessage += "舰长: ${r.nickname}\n" +
+                                    "今天已经签过到了( •̀ ω •́ )y\n" +
+                                    "=============\n"
+                            }
+                        }
+                        else -> {
+                            errorMessage += "舰长: ${r.nickname}" +
+                                "签到失败了(っ °Д °;)っ\n" +
+                                "=============\n"
+                        }
+                    }
+                }.onFailure { e ->
+                    errorMessage += "舰长: ${r.nickname}" +
+                        "签到失败了(っ °Д °;)っ\n" +
+                        "=============\n"
+                    PluginMain.logger.warning({ "签到失败" }, e)
+                }
+            }
         }
         if (subData.pushMsg){
             if (successMessage != "====原神签到====\n"){
                 delegate.sendMessage(successMessage)
+            }
+            if (bh3SuccessMessage != "====崩坏3签到====\n"){
+                delegate.sendMessage(bh3SuccessMessage)
             }
         }
         if (errorMessage != "====签到失败====\n"){
