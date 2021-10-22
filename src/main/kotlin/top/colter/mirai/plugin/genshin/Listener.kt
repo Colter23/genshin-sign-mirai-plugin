@@ -13,9 +13,6 @@ import top.colter.mirai.plugin.genshin.PluginMain.dataFolder
 import top.colter.mirai.plugin.genshin.PluginMain.httpUtils
 import top.colter.mirai.plugin.genshin.data.*
 import top.colter.mirai.plugin.genshin.utils.AesUtils
-import java.io.File
-import java.net.URL
-import java.util.stream.Collectors
 
 @OptIn(ConsoleExperimentalApi::class)
 internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListener") {
@@ -31,6 +28,21 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
     fun subscribe() {
 
         globalEventChannel().subscribeAlways<FriendMessageEvent>{
+
+//            if (message.contentEquals("test")){
+//                sender.sendMessage("请发送文字")
+//                selectMessages{
+//                    has<PlainText>{
+//                        sender.sendMessage("成功")
+//                    }
+//                    startsWith("/") {
+//                        sender.sendMessage(it)
+//                    }
+//                    defaultReply { "失败" }
+//                    timeout(10_000) { sender.sendMessage("超时") }
+//                }
+//            }
+
             val content = message.content
 
             if (GenshinPluginConfig.mode == 1 && genshinSub.size == 1 && genshinSub[sender.id] == null){
@@ -122,7 +134,8 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                 }
 
                 when(content){
-                    "米哈游签到功能" -> sender.sendMessage("原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到")
+                    "米哈游签到功能" -> sender.sendMessage("原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到\n开启消息推送 : 开启签到成功消息推送\n" +
+                        "关闭消息推送 : 关闭签到成功消息推送")
 
                     "原神签到","崩坏签到" -> {
                         if (genshinSub[sender.id] == null){
@@ -186,6 +199,27 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                         }else{
                             sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
                         }
+                    }
+
+                    "开启消息推送" -> {
+                        if (genshinSub[sender.id] != null){
+                            genshinSub[sender.id]?.pushMsg = true
+                            sender.sendMessage("已开启消息推送")
+                        }else{
+                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                        }
+                    }
+
+                    "关闭消息推送" -> {
+                        if (genshinSub[sender.id] != null){
+                            genshinSub[sender.id]?.pushMsg = false
+                            sender.sendMessage("已关闭消息推送")
+                        }else{
+                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                        }
+//                        runCatching{requireNotNull(genshinSub[454421212]).let {
+//                            sender.sendMessage("成功")
+//                        }}.onFailure { sender.sendMessage("失败") }
                     }
 
                     "退出" -> {

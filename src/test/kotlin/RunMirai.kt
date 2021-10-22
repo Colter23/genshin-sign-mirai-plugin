@@ -1,4 +1,4 @@
-package org.example.mirai.plugin
+package top.colter.mirai.plugin
 
 import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.console.MiraiConsole
@@ -13,7 +13,7 @@ suspend fun main() {
     PluginMain.load()
     PluginMain.enable()
 
-    val bot = MiraiConsole.addBot(11111111111, "2222222222222") {
+    val bot = MiraiConsole.addBot(11111111111111, "22222222222222") {
         fileBasedDeviceInfo()
     }.alsoLogin()
 
