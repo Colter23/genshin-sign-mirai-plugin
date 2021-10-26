@@ -39,16 +39,13 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
     }
 
     private fun listen() = launch{
-
-
-
         while (true){
             runCatching {
-                if (LocalTime.now().hour == 7){
+                if (LocalTime.now().hour == GenshinPluginConfig.signTime){
                     sign()
                 }
             }.onSuccess {
-                val next = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(7,(1..10).random()))
+                val next = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(GenshinPluginConfig.signTime,(1..10).random()))
                 val instant = Instant.now().until(next.toInstant(OffsetDateTime.now().offset), ChronoUnit.MILLIS)
                 delay(instant)
             }.onFailure {

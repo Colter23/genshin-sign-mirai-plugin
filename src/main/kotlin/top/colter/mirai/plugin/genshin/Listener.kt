@@ -7,6 +7,8 @@ import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.console.util.CoroutineScopeUtils.childScope
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.globalEventChannel
+import net.mamoe.mirai.event.selectMessages
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.sendAsImageTo
 import top.colter.mirai.plugin.genshin.PluginMain.dataFolder
@@ -134,12 +136,19 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                 }
 
                 when(content){
-                    "米哈游签到功能" -> sender.sendMessage("原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到\n开启消息推送 : 开启签到成功消息推送\n" +
-                        "关闭消息推送 : 关闭签到成功消息推送")
+                    "米哈游签到功能" -> {
+                        val msg = "原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到\n开启消息推送 : 开启签到成功消息推送\n" +
+                            "关闭消息推送 : 关闭签到成功消息推送"
+                        if (sender.id == GenshinPluginConfig.admin){
+                            sender.sendMessage("$msg\n全部米哈游账号 : 查看使用签到功能的全部账号\n全员补签 : 全员补签")
+                        }else{
+                            sender.sendMessage(msg)
+                        }
+                    }
 
                     "原神签到","崩坏签到" -> {
                         if (genshinSub[sender.id] == null){
-                            sender.sendMessage("签到功能简介: bot会在每天早7点左右进行签到，每个用户可以设置多个米游社账号，每个米游社账号可以绑定多个原神账号，bot会依次进行签到")
+                            sender.sendMessage("签到功能简介: bot会在每天${GenshinPluginConfig.signTime}点左右进行签到，每个用户可以设置多个米游社账号，每个米游社账号可以绑定多个原神账号，bot会依次进行签到")
                             sender.sendMessage("用户协议: bot会存储用户的米游社cookie，仅用于签到活动，除此之外不会用于其他活动。\n" +
                                 "免责声明: 此功能仅供学习交流，如有异议，请联系bot管理员删除。\n" +
                                 "开源地址: https://github.com/Colter23/genshin-sign-mirai-plugin\n\n" +
@@ -225,6 +234,41 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                     "退出" -> {
                         if (context[sender.id] != null){
                             context.remove(sender.id)
+                        }
+                    }
+
+                    "全部米哈游账号" -> {
+                        if (sender.id == GenshinPluginConfig.admin){
+                            var message = ""
+                            var a = 1
+                            genshinSub.forEach { (t, u) ->
+                                u.accounts.forEach {
+                                    message += "米游社账号$a: ${it.nickname}@${it.uid}\n"
+                                    var r = 1
+                                    it.gameRoles?.forEach { role->
+                                        message += "--原神账号$r: ${role.nickname}@${role.uid}\n"
+                                        r++
+                                    }
+                                    r = 1
+                                    it.bh3GameRoles?.forEach { role->
+                                        message += "--崩坏账号$r: ${role.nickname}@${role.uid}\n"
+                                        r++
+                                    }
+                                    a++
+                                }
+                            }
+                            sender.sendMessage(message)
+                        }else{
+                            sender.sendMessage("权限不足")
+                        }
+                    }
+
+                    "全员补签" -> {
+                        if (sender.id == GenshinPluginConfig.admin){
+                            GenshinTasker.sign()
+                            sender.sendMessage("签到完成")
+                        }else{
+                            sender.sendMessage("权限不足")
                         }
                     }
                 }
