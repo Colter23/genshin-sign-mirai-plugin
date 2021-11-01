@@ -1,8 +1,9 @@
 package top.colter.mirai.plugin.genshin
 
 const val ACT_ID = "e202009291139501"
-const val BH3_ACT_ID = "e202104072769"
-const val APP_VERSION = "2.3.0"
+//const val BH3_ACT_ID = "e202104072769"
+const val BH3_ACT_ID = "ea20211026151532"
+const val APP_VERSION = "2.7.0"
 
 const val USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/${APP_VERSION}"
 
@@ -14,6 +15,8 @@ const val YS_ROLE_URL = "${ROLE_URL}hk4e_cn"
 const val BH3_ROLE_URL = "${ROLE_URL}bh3_cn"
 
 const val AWARD_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/home?act_id=${ACT_ID}"
+const val BH3_AWARD_URL = "https://api-takumi.mihoyo.com/common/eutheniav2/outer/index?act_id=${BH3_ACT_ID}"
+
 const val INFO_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/info?region={region}&act_id=${ACT_ID}&uid={uid}"
 const val USER_INFO = "https://bbs-api.mihoyo.com/user/wapi/getUserFullInfo?gids=3"
 
@@ -26,7 +29,7 @@ fun REFERER_URL(act: String): String {
 }
 
 const val BH3_INFO_URL = "https://api-takumi.mihoyo.com/common/euthenia/index?act_id=${BH3_ACT_ID}&region={region}&uid={uid}"
-const val BH3_SIGN_URL = "https://api-takumi.mihoyo.com/common/euthenia/sign"
+const val BH3_SIGN_URL = "https://api-takumi.mihoyo.com/common/eutheniav2/sign"
 
 fun BH3_INFO_URL(region: String, uid: String): String {
     return BH3_INFO_URL.replace("{region}", region).replace("{uid}", uid)

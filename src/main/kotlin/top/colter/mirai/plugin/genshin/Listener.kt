@@ -51,228 +51,258 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                 return@subscribeAlways
             }
 
-            mutex.withLock {
-
-                when(context[sender.id]){
-                    "start" -> {
-                        if (content == "同意"){
-                            sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot\n(图片发送可能存在一定延迟)")
-                            runCatching {
-                                dataFolder.resolve("cookie.png").sendAsImageTo(sender)
-                            }.onFailure {
-                                sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
-                            }
-                            context[sender.id] = "cookie"
-                        }else if (content == "不同意"){
-                            sender.sendMessage("有缘再会♥️")
-                            context.remove(sender.id)
+            when(context[sender.id]){
+                "start" -> {
+                    if (content == "同意"){
+                        sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot\n(图片发送可能存在一定延迟)")
+                        runCatching {
+                            dataFolder.resolve("cookie.png").sendAsImageTo(sender)
+                        }.onFailure {
+                            sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
                         }
+                        context[sender.id] = "cookie"
+                    }else if (content == "不同意"){
+                        sender.sendMessage("有缘再会♥️")
+                        context.remove(sender.id)
                     }
+                }
 
-                    "cookie" -> {
+                "cookie" -> {
+                    mutex.withLock {
                         var cookie: String? = null
                         runCatching {
                             cookie = cookieHandle(content)
                             requireNotNull(cookie).let {
                                 httpUtils.cookie = cookie as String
 
-                                var userInfo = UserInfo("","")
+                                var userInfo = UserInfo("", "")
                                 runCatching info@{
                                     userInfo = httpUtils.getAndDecode<UserInfoData>(USER_INFO).userInfo
                                 }
-                                val encodeCookie = AesUtils.encrypt(cookie!!, "${sender.id}${userInfo.uid}")?: content
-                                if (genshinSub[sender.id] == null){
-                                    genshinSub[sender.id] = SubscribeData(true, mutableListOf(AccountData(userInfo.nickname, userInfo.uid, null,null, encodeCookie)))
+                                val encodeCookie =
+                                    AesUtils.encrypt(cookie!!, "${sender.id}${userInfo.uid}") ?: content
+                                if (genshinSub[sender.id] == null) {
+                                    genshinSub[sender.id] = SubscribeData(
+                                        true,
+                                        mutableListOf(
+                                            AccountData(
+                                                userInfo.nickname,
+                                                userInfo.uid,
+                                                null,
+                                                null,
+                                                encodeCookie
+                                            )
+                                        )
+                                    )
                                     context[sender.id] = "push"
+                                    sender.sendMessage(gameRole(userInfo.uid, sender.id, game == "ys"))
                                     sender.sendMessage("是否需要推送签到成功结果(如果签到失败一定会推送)\n请回复  需要  或  不需要")
-                                }else{
-                                    genshinSub[sender.id]?.accounts?.add(AccountData(userInfo.nickname, userInfo.uid, null, null, encodeCookie))
+                                } else {
+                                    genshinSub[sender.id]?.accounts?.add(
+                                        AccountData(
+                                            userInfo.nickname,
+                                            userInfo.uid,
+                                            null,
+                                            null,
+                                            encodeCookie
+                                        )
+                                    )
                                     context.remove(sender.id)
+                                    sender.sendMessage(gameRole(userInfo.uid, sender.id, game == "ys"))
                                 }
-
-                                sender.sendMessage(gameRole(userInfo.uid,sender.id, game=="ys"))
-
                             }
                         }.onFailure {
                             sender.sendMessage("cookie不大对呦, 再试试吧\n如果要退出请回复  退出")
                         }
                     }
+                }
 
-                    "push" -> {
-                        if (content == "需要" || content == "不需要") {
-                            if (content == "不需要") {
-                                genshinSub[sender.id]?.pushMsg = false
-                            }
-                            sender.sendMessage("设置完成, 请及时撤回cookie消息\n发送  米哈游签到功能  以查看功能")
-                            context.remove(sender.id)
+                "push" -> {
+                    if (content == "需要" || content == "不需要") {
+                        if (content == "不需要") {
+                            mutex.withLock { genshinSub[sender.id]?.pushMsg = false }
                         }
+                        sender.sendMessage("设置完成, 请及时撤回cookie消息\n发送  米哈游签到功能  以查看功能")
+                        context.remove(sender.id)
                     }
+                }
 
-                    "delete" -> {
-                        if (content == "全部删除"){
+                "delete" -> {
+                    mutex.withLock {
+                        if (content == "全部删除") {
                             genshinSub.remove(sender.id)
                             sender.sendMessage("删除成功")
-                        }else{
+                        } else {
                             genshinSub[sender.id]?.accounts?.removeIf { v -> v.uid == content }
-                            genshinSub[sender.id]?.accounts?.forEach { it.gameRoles?.removeIf{v -> v.uid == content} }
-                            genshinSub[sender.id]?.accounts?.forEach { it.bh3GameRoles?.removeIf{v -> v.uid == content} }
-                            if (genshinSub[sender.id]?.accounts?.size == 0){
+                            genshinSub[sender.id]?.accounts?.forEach { it.gameRoles?.removeIf { v -> v.uid == content } }
+                            genshinSub[sender.id]?.accounts?.forEach { it.bh3GameRoles?.removeIf { v -> v.uid == content } }
+                            if (genshinSub[sender.id]?.accounts?.size == 0) {
                                 genshinSub.remove(sender.id)
                             }
                             val msg = accountList(sender.id)
-                            if (msg.isEmpty()){
+                            if (msg.isEmpty()) {
                                 sender.sendMessage("列表空")
-                            }else{
+                            } else {
                                 sender.sendMessage(msg)
                             }
                         }
                         context.remove(sender.id)
                     }
+                }
 
-                    "bh3","ys" -> {
-                        sender.sendMessage(gameRole(content, sender.id, context[sender.id]=="ys"))
+                "bh3","ys" -> {
+                    mutex.withLock {
+                        sender.sendMessage(gameRole(content, sender.id, context[sender.id] == "ys"))
+                        context.remove(sender.id)
+                    }
+                }
+            }
+
+            when(content) {
+                "米哈游签到功能" -> {
+                    val msg =
+                        "原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到\n开启消息推送 : 开启签到成功消息推送\n" +
+                            "关闭消息推送 : 关闭签到成功消息推送"
+                    if (sender.id == GenshinPluginConfig.admin) {
+                        sender.sendMessage("$msg\n全部米哈游账号 : 查看使用签到功能的全部账号\n全员补签 : 全员补签")
+                    } else {
+                        sender.sendMessage(msg)
+                    }
+                }
+
+                "原神签到", "崩坏签到" -> {
+                    if (genshinSub[sender.id] == null) {
+                        sender.sendMessage("签到功能简介: bot会在每天${GenshinPluginConfig.signTime}点左右进行签到，每个用户可以设置多个米游社账号，每个米游社账号可以绑定多个原神账号，bot会依次进行签到")
+                        sender.sendMessage(
+                            "用户协议: bot会存储用户的米游社cookie，仅用于签到活动，除此之外不会用于其他活动。\n" +
+                                "免责声明: 此功能仅供学习交流，如有异议，请联系bot管理员删除。\n" +
+                                "开源地址: https://github.com/Colter23/genshin-sign-mirai-plugin\n\n" +
+                                "中途如果不想设置了可以回复  退出  \n" +
+                                "如果同意bot存储cookie，请回复  同意  来设置cookie"
+                        )
+                        context[sender.id] = "start"
+                        game = if (content == "原神签到") "ys" else "bh3"
+                    } else {
+                        mutex.withLock {
+                            if (genshinSub[sender.id]?.accounts?.size == 1) {
+                                val account = genshinSub[sender.id]?.accounts?.get(0)!!
+                                sender.sendMessage(gameRole(account.uid, sender.id, content == "原神签到"))
+                            } else {
+                                sender.sendMessage("要开启哪个账号的${content}呢, 请回复‘@’后面的uid")
+                                sender.sendMessage(mhyAccountList(sender.id))
+                                context[sender.id] = if (content == "原神签到") "ys" else "bh3"
+                            }
+                        }
+                    }
+                }
+
+                "添加米游社账号" -> {
+                    if (genshinSub[sender.id] != null) {
+                        sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot")
+                        runCatching {
+                            dataFolder.resolve("cookie.png").sendAsImageTo(sender)
+                        }.onFailure {
+                            sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                        }
+                        context[sender.id] = "cookie"
+                        game = "ys"
+                    } else {
+                        sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                    }
+                }
+
+                "删除账号" -> {
+                    if (genshinSub[sender.id] != null) {
+                        sender.sendMessage("要删除哪个账号呢, 请回复‘@’后面的uid\n可以回复  全部删除  删除并关闭签到功能")
+                        mutex.withLock { sender.sendMessage(accountList(sender.id)) }
+                        context[sender.id] = "delete"
+                    } else {
+                        sender.sendMessage("(•_•)")
+                    }
+                }
+
+                "账号列表" -> {
+                    if (genshinSub[sender.id] != null) {
+                        mutex.withLock { sender.sendMessage(accountList(sender.id)) }
+                    } else {
+                        sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                    }
+                }
+
+                "临时签到" -> {
+                    if (genshinSub[sender.id] != null) {
+                        GenshinTasker.signSingle(sender.id)
+                        sender.sendMessage("签到完成")
+                    } else {
+                        sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                    }
+                }
+
+                "开启消息推送" -> {
+                    if (genshinSub[sender.id] != null) {
+                        mutex.withLock { genshinSub[sender.id]?.pushMsg = true }
+                        sender.sendMessage("已开启消息推送")
+                    } else {
+                        sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                    }
+                }
+
+                "关闭消息推送" -> {
+                    if (genshinSub[sender.id] != null) {
+                        mutex.withLock { genshinSub[sender.id]?.pushMsg = false }
+                        sender.sendMessage("已关闭消息推送")
+                    } else {
+                        sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
+                    }
+//                        runCatching{requireNotNull(genshinSub[454421212]).let {
+//                            sender.sendMessage("成功")
+//                        }}.onFailure { sender.sendMessage("失败") }
+                }
+
+                "退出" -> {
+                    if (context[sender.id] != null) {
                         context.remove(sender.id)
                     }
                 }
 
-                when(content){
-                    "米哈游签到功能" -> {
-                        val msg = "原神签到功能 : 查看功能\n原神签到 : 开启原神签到\n崩坏签到 : 开启崩坏3签到\n添加米游社账号 : 添加米游社账号\n账号列表 : 账号列表\n删除账号 : 删除一个账号\n临时签到 : 临时执行签到\n开启消息推送 : 开启签到成功消息推送\n" +
-                            "关闭消息推送 : 关闭签到成功消息推送"
-                        if (sender.id == GenshinPluginConfig.admin){
-                            sender.sendMessage("$msg\n全部米哈游账号 : 查看使用签到功能的全部账号\n全员补签 : 全员补签")
-                        }else{
-                            sender.sendMessage(msg)
-                        }
-                    }
-
-                    "原神签到","崩坏签到" -> {
-                        if (genshinSub[sender.id] == null){
-                            sender.sendMessage("签到功能简介: bot会在每天${GenshinPluginConfig.signTime}点左右进行签到，每个用户可以设置多个米游社账号，每个米游社账号可以绑定多个原神账号，bot会依次进行签到")
-                            sender.sendMessage("用户协议: bot会存储用户的米游社cookie，仅用于签到活动，除此之外不会用于其他活动。\n" +
-                                "免责声明: 此功能仅供学习交流，如有异议，请联系bot管理员删除。\n" +
-                                "开源地址: https://github.com/Colter23/genshin-sign-mirai-plugin\n\n" +
-                                "中途如果不想设置了可以回复  退出  \n" +
-                                "如果同意bot存储cookie，请回复  同意  来设置cookie")
-                            context[sender.id] = "start"
-                            game = if(content=="原神签到") "ys" else "bh3"
-                        }else{
-                            if (genshinSub[sender.id]?.accounts?.size==1){
-                                val account = genshinSub[sender.id]?.accounts?.get(0)!!
-                                sender.sendMessage(gameRole(account.uid,sender.id,content=="原神签到"))
-                            }else{
-                                sender.sendMessage("要开启哪个账号的${content}呢, 请回复‘@’后面的uid")
-                                sender.sendMessage(mhyAccountList(sender.id))
-                                context[sender.id] = if(content=="原神签到") "ys" else "bh3"
-                            }
-                        }
-                    }
-
-                    "添加米游社账号" -> {
-                        if (genshinSub[sender.id] != null){
-                            sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot")
-                            runCatching {
-                                dataFolder.resolve("cookie.png").sendAsImageTo(sender)
-                            }.onFailure {
-                                sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
-                            }
-                            context[sender.id] = "cookie"
-                            game = "ys"
-                        }else{
-                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
-                        }
-                    }
-
-                    "删除账号" -> {
-                        if (genshinSub[sender.id] != null){
-                            sender.sendMessage("要删除哪个账号呢, 请回复‘@’后面的uid\n可以回复  全部删除  删除并关闭签到功能")
-                            sender.sendMessage(accountList(sender.id))
-                            context[sender.id] = "delete"
-                        }else{
-                            sender.sendMessage("(•_•)")
-                        }
-                    }
-
-                    "账号列表" -> {
-                        if (genshinSub[sender.id] != null){
-                            sender.sendMessage(accountList(sender.id))
-                        }else{
-                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
-                        }
-                    }
-
-                    "临时签到" -> {
-                        if (genshinSub[sender.id] != null){
-                            GenshinTasker.signSingle(sender.id)
-                            sender.sendMessage("签到完成")
-                        }else{
-                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
-                        }
-                    }
-
-                    "开启消息推送" -> {
-                        if (genshinSub[sender.id] != null){
-                            genshinSub[sender.id]?.pushMsg = true
-                            sender.sendMessage("已开启消息推送")
-                        }else{
-                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
-                        }
-                    }
-
-                    "关闭消息推送" -> {
-                        if (genshinSub[sender.id] != null){
-                            genshinSub[sender.id]?.pushMsg = false
-                            sender.sendMessage("已关闭消息推送")
-                        }else{
-                            sender.sendMessage("您还没有开启签到功能哦，先发送  原神签到 或 崩坏签到  开启吧")
-                        }
-//                        runCatching{requireNotNull(genshinSub[454421212]).let {
-//                            sender.sendMessage("成功")
-//                        }}.onFailure { sender.sendMessage("失败") }
-                    }
-
-                    "退出" -> {
-                        if (context[sender.id] != null){
-                            context.remove(sender.id)
-                        }
-                    }
-
-                    "全部米哈游账号" -> {
-                        if (sender.id == GenshinPluginConfig.admin){
+                "全部米哈游账号" -> {
+                    if (sender.id == GenshinPluginConfig.admin) {
+                        mutex.withLock {
                             var message = ""
                             var a = 1
                             genshinSub.forEach { (t, u) ->
                                 u.accounts.forEach {
                                     message += "米游社账号$a: ${it.nickname}@${it.uid}\n"
                                     var r = 1
-                                    it.gameRoles?.forEach { role->
+                                    it.gameRoles?.forEach { role ->
                                         message += "--原神账号$r: ${role.nickname}@${role.uid}\n"
                                         r++
                                     }
                                     r = 1
-                                    it.bh3GameRoles?.forEach { role->
+                                    it.bh3GameRoles?.forEach { role ->
                                         message += "--崩坏账号$r: ${role.nickname}@${role.uid}\n"
                                         r++
                                     }
                                     a++
                                 }
                             }
-                            sender.sendMessage(message)
-                        }else{
-                            sender.sendMessage("权限不足")
                         }
+                        sender.sendMessage(message)
+                    } else {
+                        sender.sendMessage("权限不足")
                     }
+                }
 
-                    "全员补签" -> {
-                        if (sender.id == GenshinPluginConfig.admin){
-                            GenshinTasker.sign()
-                            sender.sendMessage("签到完成")
-                        }else{
-                            sender.sendMessage("权限不足")
-                        }
+                "全员补签" -> {
+                    if (sender.id == GenshinPluginConfig.admin) {
+                        GenshinTasker.sign()
+                        sender.sendMessage("签到完成")
+                    } else {
+                        sender.sendMessage("权限不足")
                     }
                 }
             }
+
         }
     }
 
