@@ -93,7 +93,7 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                         if (subData.pushMsg){
                             successMessage += "旅行者: ${r.nickname}\n" +
                                 "今天已经签过到了( •̀ ω •́ )y\n" +
-                                "=============\n"
+                                "===============\n"
                         }
                         return@l
                     }
@@ -106,17 +106,17 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                             successMessage += "旅行者: ${r.nickname}\n" +
                                 "奖励: ${award.name}x${award.count}\n" +
                                 "天数: ${signInfo.totalSignDay+1}\n" +
-                                "=============\n"
+                                "===============\n"
                         }
                     }else{
                         errorMessage += "旅行者: ${r.nickname}" +
                             "签到失败了(っ °Д °;)っ\n" +
-                            "=============\n"
+                            "===============\n"
                     }
                 }.onFailure { e ->
                     errorMessage += "旅行者: ${r.nickname}" +
                         "签到失败了(っ °Д °;)っ\n" +
-                        "=============\n"
+                        "===============\n"
                     PluginMain.logger.warning({ "签到失败" }, e)
                 }
             }
@@ -135,40 +135,40 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                                 bh3SuccessMessage += "舰长: ${r.nickname}\n" +
                                     "奖励: ${award?.name}x${award?.cnt}\n" +
                                     "天数: ${award?.day}\n" +
-                                    "=============\n"
+                                    "===============\n"
                             }
                         }
                         -5003 -> {
                             if (subData.pushMsg){
                                 bh3SuccessMessage += "舰长: ${r.nickname}\n" +
                                     "今天已经签过到了( •̀ ω •́ )y\n" +
-                                    "=============\n"
+                                    "===============\n"
                             }
                         }
                         else -> {
                             errorMessage += "舰长: ${r.nickname}" +
                                 "签到失败了(っ °Д °;)っ\n" +
-                                "=============\n"
+                                "===============\n"
                         }
                     }
                 }.onFailure { e ->
                     errorMessage += "舰长: ${r.nickname}" +
                         "签到失败了(っ °Д °;)っ\n" +
-                        "=============\n"
+                        "===============\n"
                     PluginMain.logger.warning({ "签到失败" }, e)
                 }
             }
         }
         if (subData.pushMsg){
             if (successMessage != "====原神签到====\n"){
-                delegate.sendMessage(successMessage)
+                delegate.sendMessage(successMessage.dropLast(1))
             }
             if (bh3SuccessMessage != "====崩坏3签到====\n"){
-                delegate.sendMessage(bh3SuccessMessage)
+                delegate.sendMessage(bh3SuccessMessage.dropLast(1))
             }
         }
         if (errorMessage != "====签到失败====\n"){
-            delegate.sendMessage(errorMessage)
+            delegate.sendMessage(errorMessage.dropLast(1))
         }
     }
 

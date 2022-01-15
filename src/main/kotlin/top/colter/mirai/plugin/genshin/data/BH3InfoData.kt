@@ -14,8 +14,8 @@ data class BH3SignData(
     val start: String,
     @SerialName("end_at")
     val end: String,
-    @SerialName("now")
-    val now: String,
+    @SerialName("sign_cnt")
+    val signCount: String,
     @SerialName("list")
     val list: List<BH3AwardItem>
 )

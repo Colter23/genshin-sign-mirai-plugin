@@ -267,8 +267,8 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
 
                 "全部米哈游账号" -> {
                     if (sender.id == GenshinPluginConfig.admin) {
+                        var message = ""
                         mutex.withLock {
-                            var message = ""
                             var a = 1
                             genshinSub.forEach { (t, u) ->
                                 u.accounts.forEach {
