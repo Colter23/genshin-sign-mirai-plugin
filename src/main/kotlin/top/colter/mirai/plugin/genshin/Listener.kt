@@ -54,11 +54,14 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
             when(context[sender.id]){
                 "start" -> {
                     if (content == "同意"){
-                        sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot\n(图片发送可能存在一定延迟)")
-                        runCatching {
-                            dataFolder.resolve("cookie.png").sendAsImageTo(sender)
-                        }.onFailure {
-                            sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                        val bi = GenshinPluginConfig.desc.contains("{cookie-img}")
+                        sender.sendMessage(GenshinPluginConfig.desc.replace("{cookie-img}", ""))
+                        if (bi){
+                            runCatching {
+                                dataFolder.resolve("cookie.png").sendAsImageTo(sender)
+                            }.onFailure {
+                                sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                            }
                         }
                         context[sender.id] = "cookie"
                     }else if (content == "不同意"){
@@ -198,11 +201,14 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
 
                 "添加米游社账号" -> {
                     if (genshinSub[sender.id] != null) {
-                        sender.sendMessage("请用电脑访问米游社并登陆 https://bbs.mihoyo.com/ys/\n之后按照下图的步骤获取cookie\n并把cookie发送给bot")
-                        runCatching {
-                            dataFolder.resolve("cookie.png").sendAsImageTo(sender)
-                        }.onFailure {
-                            sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                        val bi = GenshinPluginConfig.desc.contains("{cookie-img}")
+                        sender.sendMessage(GenshinPluginConfig.desc.replace("{cookie-img}", ""))
+                        if (bi){
+                            runCatching {
+                                dataFolder.resolve("cookie.png").sendAsImageTo(sender)
+                            }.onFailure {
+                                sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                            }
                         }
                         context[sender.id] = "cookie"
                         game = "ys"
