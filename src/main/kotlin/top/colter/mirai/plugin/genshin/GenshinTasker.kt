@@ -1,9 +1,6 @@
 package top.colter.mirai.plugin.genshin
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import net.mamoe.mirai.Bot
@@ -20,7 +17,6 @@ import top.colter.mirai.plugin.genshin.utils.AesUtils
 import top.colter.mirai.plugin.genshin.utils.decode
 import java.time.*
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 
 object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
@@ -39,7 +35,7 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
     }
 
     private fun listen() = launch{
-        while (true){
+        while (isActive){
             runCatching {
                 if (LocalTime.now().hour == GenshinPluginConfig.signTime){
                     sign()

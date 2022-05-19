@@ -1,24 +1,22 @@
 package top.colter.mirai.plugin.genshin
 
 import kotlinx.coroutines.sync.Mutex
-import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.disable
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.event.GlobalEventChannel
-import net.mamoe.mirai.event.events.NewFriendRequestEvent
+import net.mamoe.mirai.event.events.BotOnlineEvent
+import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.utils.info
 import top.colter.mirai.plugin.genshin.utils.HttpUtils
-import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import javax.imageio.ImageIO
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "top.colter.genshin-sign",
         name = "GenshinSign",
-        version = "0.3.4"
+        version = "0.3.5"
     ) {
         author("Colter")
         info(
@@ -40,7 +38,12 @@ object PluginMain : KotlinPlugin(
         GenshinPluginData.reload()
         GenshinPluginConfig.reload()
         Listener.subscribe()
-        GenshinTasker.start()
+
+        if (Bot.instances.isEmpty()) {
+            globalEventChannel().subscribeOnce<BotOnlineEvent> { GenshinTasker.start() }
+        } else {
+            GenshinTasker.start()
+        }
 
         val cookieImg = dataFolder.resolve("cookie.png")
         if (!cookieImg.exists()) {
