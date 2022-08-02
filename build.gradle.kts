@@ -3,11 +3,11 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
-    id("net.mamoe.mirai-console") version "2.10.3"
+    id("net.mamoe.mirai-console") version "2.11.0"
 }
 
 group = "top.colter"
-version = "0.3.5"
+version = "0.3.6"
 
 repositories {
     mavenLocal()

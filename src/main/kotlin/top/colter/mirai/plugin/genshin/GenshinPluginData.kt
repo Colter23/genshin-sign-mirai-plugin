@@ -16,5 +16,7 @@ object GenshinPluginData: AutoSavePluginData("GenshinPluginData") {
     @ValueDescription("原神奖励信息")
     var awards: List<AwardItem> by value()
 
+    @ValueDescription("崩坏3奖励信息")
+    var bh3Awards: List<AwardItem> by value()
 
 }

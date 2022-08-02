@@ -51,11 +51,14 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
     }
 
     private fun updateAwards(){
-        if (GenshinPluginData.awardsMonth != LocalDate.now().monthValue){
+        if (GenshinPluginData.bh3Awards.isEmpty() || GenshinPluginData.awardsMonth != LocalDate.now().monthValue){
             runCatching {
                 val awards = httpUtils.getAndDecode<Awards>(AWARD_URL)
                 GenshinPluginData.awardsMonth = awards.month
                 GenshinPluginData.awards = awards.awards
+
+                val bh3Awards = httpUtils.getAndDecode<Awards>(BH3_AWARD_URL)
+                GenshinPluginData.bh3Awards = bh3Awards.awards
             }.onFailure {
                 PluginMain.logger.warning({ "获取奖励信息失败" }, it)
             }
@@ -119,18 +122,27 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
             httpUtils.actId = BH3_ACT_ID
             it.bh3GameRoles?.forEach b@{ r->
                 runCatching{
-//                    val signInfo = httpUtils.getAndDecode<BH3InfoData>(BH3_INFO_URL(r.region, r.uid))
+                    val signInfo = httpUtils.getAndDecode<SignInfoData>(BH3_INFO_URL(r.region, r.uid))
+                    if (signInfo.isSign){
+                        if (subData.pushMsg){
+                            successMessage += "舰长: ${r.nickname}\n" +
+                                "今天已经签过到了 ( •̀ ω •́ )y\n" +
+                                "===============\n"
+                        }
+                        return@b
+                    }
                     val postBody = "{\"act_id\":\"${BH3_ACT_ID}\",\"region\":\"${r.region}\",\"uid\":\"${r.uid}\"}"
                     val res = httpUtils.post(BH3_SIGN_URL, postBody).decode<ResultData>()
                     when(res.code){
                         0 -> {
-                            val signData = res.data?.decode<BH3SignData>()
-                            val award = signData?.list?.stream()?.filter { a -> a.status == 2 }?.max { o1, o2 -> if(o1.day>o2.day) 1 else -1 }?.get()
+//                            val signData = res.data?.decode<BH3SignData>()
+//                            val award = signData?.list?.stream()?.filter { a -> a.status == 2 }?.max { o1, o2 -> if(o1.day>o2.day) 1 else -1 }?.get()
+                            val award = GenshinPluginData.bh3Awards[signInfo.totalSignDay]
 
                             if (subData.pushMsg){
                                 bh3SuccessMessage += "舰长: ${r.nickname}\n" +
-                                    "奖励: ${award?.name}x${award?.cnt}\n" +
-                                    "天数: ${award?.day}\n" +
+                                    "奖励: ${award.name}x${award.count}\n" +
+                                    "天数: ${signInfo.totalSignDay+1}\n" +
                                     "===============\n"
                             }
                         }
@@ -145,13 +157,15 @@ object GenshinTasker: CoroutineScope by PluginMain.childScope("GenshinTasker") {
                             errorMessage += "舰长: ${r.nickname}" +
                                 "签到失败了(っ °Д °;)っ\n" +
                                 "===============\n"
+
+                            PluginMain.logger.error("签到失败, $res")
                         }
                     }
                 }.onFailure { e ->
                     errorMessage += "舰长: ${r.nickname}" +
-                        "签到失败了(っ °Д °;)っ\n" +
+                        "签到失败了!(っ °Д °;)っ\n" +
                         "===============\n"
-                    PluginMain.logger.warning({ "签到失败" }, e)
+                    PluginMain.logger.error("签到失败!", e)
                 }
             }
         }

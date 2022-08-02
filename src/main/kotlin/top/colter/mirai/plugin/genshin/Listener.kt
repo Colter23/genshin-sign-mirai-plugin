@@ -11,6 +11,7 @@ import net.mamoe.mirai.event.selectMessages
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.ExternalResource.Companion.sendAsImageTo
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import top.colter.mirai.plugin.genshin.PluginMain.dataFolder
 import top.colter.mirai.plugin.genshin.PluginMain.httpUtils
 import top.colter.mirai.plugin.genshin.data.*
@@ -204,11 +205,17 @@ internal object Listener: CoroutineScope by PluginMain.childScope("GenshinListen
                         val bi = GenshinPluginConfig.desc.contains("{cookie-img}")
                         sender.sendMessage(GenshinPluginConfig.desc.replace("{cookie-img}", ""))
                         if (bi){
-                            runCatching {
-                                dataFolder.resolve("cookie.png").sendAsImageTo(sender)
-                            }.onFailure {
-                                sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                            val c = dataFolder.resolve("cookie.png")
+                            if (c.exists()){
+                                c.sendAsImageTo(sender)
+                            }else {
+                                PluginMain.getResourceAsStream("cookie.png")!!.readBytes().toExternalResource().toAutoCloseable().sendAsImageTo(sender)
                             }
+                            //runCatching {
+                            //    dataFolder.resolve("cookie.png").sendAsImageTo(sender)
+                            //}.onFailure {
+                            //    sender.sendMessage("获取图片失败, 可前往https://github.com/Colter23/genshin-sign-mirai-plugin查看获取cookie步骤")
+                            //}
                         }
                         context[sender.id] = "cookie"
                         game = "ys"

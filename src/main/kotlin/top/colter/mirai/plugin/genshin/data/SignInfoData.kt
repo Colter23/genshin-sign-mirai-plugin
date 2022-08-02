@@ -12,9 +12,9 @@ data class SignInfoData(
     @SerialName("is_sign")
     val isSign: Boolean,
     @SerialName("first_bind")
-    val firstBind: Boolean,
+    val firstBind: Boolean? = null,
     @SerialName("is_sub")
     val isSub: Boolean,
     @SerialName("month_first")
-    val monthFirst: Boolean
+    val monthFirst: Boolean? = null
 )

@@ -16,7 +16,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "top.colter.genshin-sign",
         name = "GenshinSign",
-        version = "0.3.5"
+        version = "0.3.6"
     ) {
         author("Colter")
         info(
@@ -45,12 +45,12 @@ object PluginMain : KotlinPlugin(
             GenshinTasker.start()
         }
 
-        val cookieImg = dataFolder.resolve("cookie.png")
-        if (!cookieImg.exists()) {
-            val imgInput = URL("https://img.colter.top/cookie.png").openConnection().getInputStream()
-            imgInput.transferTo(FileOutputStream(cookieImg))
-            imgInput.close()
-        }
+        //val cookieImg = dataFolder.resolve("cookie.png")
+        //if (!cookieImg.exists()) {
+        //    val imgInput = URL("https://img.colter.top/cookie.png").openConnection().getInputStream()
+        //    imgInput.transferTo(FileOutputStream(cookieImg))
+        //    imgInput.close()
+        //}
     }
     override fun onDisable() {
         Listener.stop()
