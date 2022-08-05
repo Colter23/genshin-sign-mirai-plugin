@@ -1,4 +1,4 @@
-package top.colter.mirai.plugin.genshin.data
+package top.colter.mirai.plugin.mihoyo.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

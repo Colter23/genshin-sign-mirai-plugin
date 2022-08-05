@@ -1,7 +1,17 @@
-package top.colter.mirai.plugin.genshin.data
+package top.colter.mirai.plugin.mihoyo.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+@Serializable
+data class SignData(
+    @SerialName("act_id")
+    val actId: String,
+    @SerialName("region")
+    val region: String,
+    @SerialName("uid")
+    val uid: String,
+)
 
 @Serializable
 data class SignInfoData(
