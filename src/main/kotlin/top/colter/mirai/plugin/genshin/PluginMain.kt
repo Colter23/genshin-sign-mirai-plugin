@@ -16,7 +16,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "top.colter.genshin-sign",
         name = "GenshinSign",
-        version = "0.3.6"
+        version = "0.3.7"
     ) {
         author("Colter")
         info(

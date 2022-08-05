@@ -2,6 +2,11 @@
 
 > 原神米游社签到 [Mirai](https://github.com/mamoe/mirai) 插件
 
+## 下个版本重构
+支持米哈游全部游戏    
+可能会改名为 `mihoyo-sign-mirai-plugin`   
+进度 -> [v1](https://github.com/Colter23/genshin-sign-mirai-plugin/tree/v1)
+
 ## 简介
 介于github上的原神签到项目大多都被干了，所以只能自己写一个了(
 

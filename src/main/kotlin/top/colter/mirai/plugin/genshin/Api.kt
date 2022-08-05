@@ -3,7 +3,7 @@ package top.colter.mirai.plugin.genshin
 const val ACT_ID = "e202009291139501"
 //const val BH3_ACT_ID = "e202104072769"
 const val BH3_ACT_ID = "e202207181446311"
-const val APP_VERSION = "2.3.0"
+const val APP_VERSION = "2.28.1"
 
 const val USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/${APP_VERSION}"
 

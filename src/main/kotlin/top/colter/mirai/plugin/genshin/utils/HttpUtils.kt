@@ -33,7 +33,7 @@ class HttpUtils {
     private var client: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(10000)).build()
 
     private fun getDS(): String {
-        val n = "h8w582wxwgqvahcdkpvdhbh2w9casgfl"
+        val n = "ulInCDohgEs557j0VsPDYnQaaz6KJcv5"
         val i = Instant.now().epochSecond
         val r = getRandomStr()
         val c = md5Hex("salt=$n&t=$i&r=$r")
